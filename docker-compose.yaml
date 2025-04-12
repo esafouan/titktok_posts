@@ -1,0 +1,42 @@
+version: '3'
+
+services:
+  # Selenium Hub
+  selenium-hub:
+    image: selenium/hub:4.13.0
+    container_name: selenium-hub
+    ports:
+      - "4442:4442"
+      - "4443:4443"
+      - "4444:4444"
+
+  # Chrome Node
+  chrome:
+    image: selenium/node-chrome:4.13.0
+    shm_size: 2gb
+    depends_on:
+      - selenium-hub
+    environment:
+      - SE_EVENT_BUS_HOST=selenium-hub
+      - SE_EVENT_BUS_PUBLISH_PORT=4442
+      - SE_EVENT_BUS_SUBSCRIBE_PORT=4443
+      - SE_NODE_MAX_SESSIONS=2
+      - SE_NODE_OVERRIDE_MAX_SESSIONS=true
+    ports:
+      - "6900:5900"  # For VNC viewer access
+
+  tiktok:
+    build:
+      context: ./scrap_tiktok/.
+      dockerfile: dockerfile
+    volumes:
+      - ./scrap_tiktok/data:/app/data
+      - ./scrap_tiktok/images:/app/images
+      - ./scrap_tiktok/urls.txt:/app/urls.txt
+      - ./scrap_tiktok/script.py:/app/script.py  
+    environment:
+      - PYTHONUNBUFFERED=1
+      - SELENIUM_HUB_URL=http://selenium-hub:4444/wd/hub
+
+    command: tail -f /dev/null
+    container_name: tiktok

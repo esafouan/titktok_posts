@@ -1,0 +1,22 @@
+FROM python:3.9-slim
+
+# Install basic utilities for debugging
+RUN apt-get update && apt-get install -y \
+    curl \
+    vim \
+    nano \
+    iputils-ping \
+    procps \
+    && rm -rf /var/lib/apt/lists/*
+
+# Create app directory
+WORKDIR /app
+
+# Copy requirements first to leverage Docker cache
+COPY requirements.txt ./
+RUN pip install --no-cache-dir -r requirements.txt
+
+# Create required directories
+RUN mkdir -p data images saved_html
+
+# No CMD here as we'll use the command in docker-compose.yml
